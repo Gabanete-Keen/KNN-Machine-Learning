@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TakeTest — PAHUWAY</title>
+    <link rel="stylesheet" href="styling/common.css" />
+    <link rel="stylesheet" href="styling/TakeTest.css" />
+    <script src="TakeTest.js" defer></script>
+    <script src="navigation.js" defer></script>
+  </head>
+  <body class="TakeTest-page">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="PAHUWAY home">
+        <svg class="brand-mark" viewBox="0 0 48 48" fill="none" aria-hidden="true" focusable="false">
+          <rect x="1" y="1" width="46" height="46" rx="17" fill="var(--mint)" stroke="var(--border)" />
+          <circle cx="24" cy="21" r="8" fill="var(--peach)" />
+          <path d="M16 23a8 8 0 0 1 16 0M24 7v3M11 13l2 2M37 13l-2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          <path d="M10 28c5-4 9 4 14 0s9 4 14 0M13 34c4-3 7 3 11 0s7 3 11 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        </svg>
+        <span class="brand-wordmark">PAHU<span class="brand-accent">WAY</span></span>
+      </a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="TakeTest.html" aria-current="page">TakeTest</a>
+        <a href="results.html">Results</a>
+        <a href="tips.html">Tips</a>
+        <a class="nav-sign-in" href="sign-in.html">Sign in</a>
+      </nav>
+    </header>
+    <main class="TakeTest-main">
+      <div
+        class="progress"
+        role="progressbar"
+        aria-label="TakeTest progress"
+        aria-valuemin="0"
+        aria-valuemax="8"
+        aria-valuenow="1"
+      >
+        <div class="progress-fill"></div>
+      </div>
+      <p class="question-number" aria-live="polite">Question 1 of 8</p>
+      <form id="TakeTest-form">
+        <fieldset class="question" aria-describedby="question-help">
+          <legend tabindex="-1">How well have you been sleeping lately?</legend>
+          <label class="answer"
+            ><input type="radio" name="sleep" value="very-well" /><span
+              >Very well</span
+            ></label
+          >
+          <label class="answer"
+            ><input type="radio" name="sleep" value="fairly-well" /><span
+              >Fairly well</span
+            ></label
+          >
+          <label class="answer"
+            ><input type="radio" name="sleep" value="not-great" /><span
+              >Not great</span
+            ></label
+          >
+          <label class="answer"
+            ><input type="radio" name="sleep" value="poorly" /><span
+              >Poorly</span
+            ></label
+          >
+        </fieldset>
+        <div class="TakeTest-actions">
+          <button class="button" id="next-question" type="submit" disabled>
+            Next
+          </button>
+        </div>
+      </form>
+      <p class="question-help" id="question-help">
+        There are no right or wrong answers. Answer as you feel today.
+      </p>
+      <section
+        id="TakeTest-complete"
+        class="empty-state"
+        hidden
+        aria-labelledby="complete-title"
+      >
+        <h1 id="complete-title" tabindex="-1">TakeTest complete</h1>
+        <p>
+          Thank you for taking a moment for yourself. Explore some gentle next
+          steps in our wellness tips.
+        </p>
+        <a class="button" href="tips.html">Explore wellness tips</a>
+        <p class="demo-note">
+          Your answers are not saved or used to calculate a result in this
+          preview.
+        </p>
+      </section>
+    </main>
+    <footer class="site-footer">
+      For wellness awareness only — not a medical diagnosis. Without an account
+      your answers stay on your device; signed-in tests are saved privately
+      to your account. If you're in crisis, contact local emergency services.
+    </footer>
+  </body>
+</html>

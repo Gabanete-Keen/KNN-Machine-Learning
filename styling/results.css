@@ -1,0 +1,22 @@
+/* Styles for results.html. */
+.results-main {
+  max-width: 912px;
+  padding: 60px 24px 0;
+  margin: auto;
+}
+
+.results-main h1 {
+  font-size: 56px;
+  line-height: 1.2;
+}
+
+@media (max-width: 760px) {
+  .results-main {
+    padding-top: 44px;
+  }
+
+  .results-main h1 {
+    font-size: 44px;
+  }
+}
+

@@ -1,0 +1,119 @@
+/* Styles for index.html. */
+.hero {
+  text-align: center;
+  padding: 142px 24px 144px;
+}
+
+.eyebrow {
+  color: var(--green);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  font-size: clamp(54px, 8.8vw, 96px);
+  line-height: 1.15;
+  margin-top: 30px;
+}
+
+.hero-description {
+  color: var(--muted);
+  max-width: 760px;
+  font-size: 26px;
+  line-height: 1.6;
+  margin: 36px auto 50px;
+}
+
+.hero .button {
+  box-shadow: 0 3px 4px #20383e18;
+}
+
+.home-content {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0 30px;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.feature-card {
+  padding: 34px 36px;
+  border-radius: 48px;
+  background: #ffffffd9;
+  min-height: 288px;
+}
+
+.feature-card h2 {
+  font-size: 32px;
+  line-height: 1.3;
+  margin-bottom: 14px;
+}
+
+.feature-card p {
+  color: var(--muted);
+}
+
+.wellness-note {
+  max-width: 864px;
+  margin: 60px auto 0;
+  padding: 22px 28px;
+  border-radius: 999px;
+  background: var(--lavender);
+  text-align: center;
+}
+
+@media (min-width: 1440px) {
+  .hero {
+    padding-top: 150px;
+  }
+}
+
+@media (max-width: 760px) {
+  .hero {
+    padding: 80px 22px;
+  }
+
+  .hero h1 {
+    font-size: clamp(45px, 9vw, 68px);
+  }
+
+  .hero-description {
+    font-size: 21px;
+    margin: 28px auto 36px;
+  }
+
+  .home-content {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-card {
+    min-height: auto;
+    padding: 30px;
+    border-radius: 34px;
+  }
+
+  .wellness-note {
+    border-radius: 32px;
+    margin-top: 36px;
+  }
+
+  .feature-card h2 {
+    font-size: 29px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding-top: 60px;
+  }
+}
+

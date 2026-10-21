@@ -1,0 +1,307 @@
+/* Shared foundations, navigation, buttons, and reusable components. */
+:root {
+  --ink: #20383e;
+  --muted: #506b7b;
+  --green: #4c9988;
+  --mint: #e3f3e9;
+  --lavender: #eae6ff;
+  --peach: #ffdfd2;
+  --border: #cee1dc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  position: relative;
+  isolation: isolate;
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100svh;
+  color: var(--ink);
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 20px;
+  line-height: 1.5;
+  background:
+    radial-gradient(ellipse at 15% 12%, #ebe8ff 0, transparent 48%),
+    radial-gradient(ellipse at 100% 30%, #ffe1d5 0, transparent 48%), #f4fcf6;
+}
+
+/* The curved decoration belongs to the full page background. */
+body::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  right: 0;
+  width: 70%;
+  height: min(72vh, 800px);
+  border-bottom-left-radius: 100% 100%;
+  background: linear-gradient(110deg, var(--peach), var(--mint) 36%, var(--green));
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button,
+a,
+input {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid #286a60;
+  outline-offset: 5px;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1,
+h2,
+.brand {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 30px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  background: rgb(244 252 246 / 15%);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  transition: background-color 200ms ease, backdrop-filter 200ms ease, box-shadow 200ms ease;
+}
+
+.site-header.is-scrolled {
+  background: rgb(244 252 246 / 95%);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 12px #20383e14;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header {
+    transition: none;
+  }
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink);
+  font-size: 32px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brand-mark {
+  flex: none;
+  width: 1.5em;
+  height: 1.5em;
+  color: #3d8274;
+}
+
+.brand-wordmark {
+  position: relative;
+  padding-bottom: 5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+}
+
+.brand-wordmark::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 36%;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--green), var(--mint));
+}
+
+.brand-accent {
+  color: #3d8274;
+}
+
+.brand:hover .brand-accent {
+  color: var(--ink);
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 42px;
+}
+
+.site-nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.site-nav a:hover {
+  color: var(--ink);
+}
+
+.button,
+.site-nav .nav-sign-in {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  color: white;
+  background: var(--green);
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.site-nav .nav-sign-in {
+  padding: 11px 24px;
+}
+
+.button:hover,
+.site-nav .nav-sign-in:hover {
+  background: #3d8274;
+  color: white;
+}
+
+.button {
+  padding: 23px 48px;
+  font-size: 24px;
+}
+
+.site-footer {
+  max-width: 1200px;
+  margin: auto;
+  padding: 94px 50px 60px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+.intro {
+  font-size: 23px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+
+.auth-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 34px;
+  color: var(--muted);
+}
+
+.demo-note {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+.empty-state {
+  background: #ffffffd9;
+  padding: 40px;
+  border-radius: 40px;
+  margin-top: 36px;
+}
+
+.empty-state h2 {
+  font-size: 32px;
+  margin-bottom: 16px;
+}
+
+.empty-state .button {
+  margin-top: 28px;
+}
+
+@media (max-width: 760px) {
+  body {
+    font-size: 18px;
+  }
+
+  .site-header {
+    padding: 22px 20px;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .brand {
+    font-size: 29px;
+  }
+
+  .site-nav {
+    gap: 20px;
+    font-size: 16px;
+  }
+
+  .site-nav .nav-sign-in {
+    padding: 9px 17px;
+  }
+
+  .button {
+    font-size: 21px;
+    padding: 18px 32px;
+  }
+
+  .intro {
+    font-size: 20px;
+  }
+
+  .auth-links {
+    gap: 16px;
+  }
+
+  .site-footer {
+    padding: 80px 24px 36px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .site-header {
+    justify-content: center;
+  }
+
+  .site-nav {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+  }
+}
+
+
+@media (max-width: 600px) {
+  body::before {
+    width: 92%;
+    height: 320px;
+  }
+}

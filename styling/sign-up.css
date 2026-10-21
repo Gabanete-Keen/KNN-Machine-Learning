@@ -1,0 +1,225 @@
+/* Styles for sign-up.html. */
+.auth-page {
+  display: flex;
+  flex-direction: column;
+  font-size: 16px;
+}
+
+.auth-page .site-header {
+  width: 100%;
+  margin: 0 auto;
+  max-width: none;
+  padding: 24px 30px;
+}
+
+.auth-page .brand {
+  font-size: 28px;
+}
+
+.auth-page .site-nav {
+  gap: 28px;
+  font-size: 16px;
+}
+
+.auth-main {
+  width: min(500px, 100%);
+  margin: auto;
+  padding: 48px 24px 28px;
+}
+
+.auth-mark {
+  display: block;
+  width: 78px;
+  height: 68px;
+  margin-bottom: 12px;
+  color: var(--green);
+  filter: drop-shadow(0 3px 2px #20383e12);
+}
+
+.auth-main h1 {
+  max-width: 350px;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: clamp(28px, 6vw, 34px);
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--green);
+}
+
+.auth-main .intro {
+  max-width: 300px;
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.auth-form {
+  margin: 24px -8px 0;
+  padding: 28px 20px;
+  background: var(--green);
+  color: white;
+}
+
+.field {
+  margin-bottom: 24px;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.field input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  padding: 10px 44px;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--mint);
+  color: var(--ink);
+  font-size: 16px;
+}
+
+
+/* Icons sit inside the inputs without covering their text. */
+.input-wrap {
+  position: relative;
+  color: #3d8274;
+}
+
+.field-icon {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  width: 19px;
+  height: 19px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.field input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #3d8274;
+  cursor: pointer;
+}
+
+.password-toggle:hover {
+  background: #4c998818;
+}
+
+.password-toggle:focus-visible {
+  outline-offset: -4px;
+}
+
+.eye-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.password-toggle[aria-pressed="true"] .eye-slash {
+  display: none;
+}
+
+.field input:focus-visible {
+  outline-color: white;
+  outline-offset: 3px;
+}
+
+.auth-form .button {
+  display: flex;
+  width: 76%;
+  min-height: 44px;
+  margin: 32px auto 0;
+  padding: 10px 24px;
+  border: 1px solid #ffffff70;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--mint), #72b5a6 48%, #3d8274);
+  box-shadow: inset 0 1px 0 #ffffff80, 0 3px 8px #20383e18;
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.auth-form .button:hover {
+  background: linear-gradient(180deg, var(--mint), #85c4b6 48%, var(--green));
+}
+
+.auth-main .auth-links {
+  justify-content: center;
+  gap: 12px 20px;
+  margin-top: 24px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.auth-links a {
+  color: #3d8274;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.auth-links a:hover {
+  text-decoration: underline;
+}
+
+.auth-main .demo-note {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.auth-page .site-footer {
+  width: 100%;
+  margin: 0 auto;
+  max-width: 720px;
+  padding: 36px 24px 28px;
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .auth-page .site-header {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 20px 16px;
+  }
+
+  .auth-page .site-nav {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    font-size: 14px;
+  }
+
+  .auth-main {
+    padding: 40px 24px 24px;
+  }
+}
+
+@media (max-width: 360px) {
+  .auth-main {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .auth-form {
+    padding: 24px 16px;
+  }
+}

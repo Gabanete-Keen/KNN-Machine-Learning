@@ -1,0 +1,140 @@
+/* Styles for TakeTest.html. */
+.TakeTest-main {
+  max-width: 912px;
+  padding: 60px 24px 0;
+  margin: auto;
+}
+
+.progress {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--mint);
+  margin-bottom: 34px;
+}
+
+.progress-fill {
+  width: 12.5%;
+  height: 100%;
+  background: var(--green);
+}
+
+.question-number {
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.question {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.question legend {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 48px;
+  line-height: 1.25;
+  padding: 0;
+  margin-bottom: 36px;
+}
+
+.answer {
+  position: relative;
+  display: block;
+  margin-bottom: 18px;
+  cursor: pointer;
+}
+
+.answer input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.answer span {
+  display: block;
+  background: white;
+  border: 1px solid var(--border);
+  padding: 22px 30px;
+  border-radius: 999px;
+  font-size: 24px;
+}
+
+.answer:hover span {
+  background: #f3faf6;
+}
+
+.answer input:checked + span {
+  background: var(--mint);
+  border-color: var(--green);
+  box-shadow: inset 0 0 0 1px var(--green);
+}
+
+.answer input:focus-visible + span {
+  outline: 3px solid #286a60;
+  outline-offset: 4px;
+}
+
+.question-help {
+  margin-top: 46px;
+  font-size: 17px;
+  color: var(--muted);
+}
+
+.TakeTest-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 28px;
+}
+
+.TakeTest-actions .button {
+  min-width: 160px;
+}
+
+.TakeTest-actions .button:disabled {
+  background: var(--green);
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+#complete-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 44px;
+  line-height: 1.2;
+  margin-bottom: 20px;
+}
+
+.TakeTest-page .site-footer {
+  padding-top: 150px;
+}
+
+@media (max-width: 760px) {
+  .TakeTest-main {
+    padding-top: 44px;
+  }
+
+  .question legend {
+    font-size: 36px;
+  }
+
+  .answer span {
+    font-size: 21px;
+    padding: 20px 24px;
+  }
+
+  .TakeTest-page .site-footer {
+    padding: 80px 24px 36px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .question legend {
+    font-size: 32px;
+  }
+}
+

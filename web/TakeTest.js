@@ -136,24 +136,15 @@ form.addEventListener("submit", async (event) => {
   try {
     sessionStorage.removeItem("pahuway-result");
 
-    const response = await fetch("/api/predict", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(answers),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.error || "Prediction failed.");
-    }
+    const result = await window.pahuwayRequest('/api/predict', answers);
 
     if (!["Low", "Medium", "High"].includes(result.stress_level)) {
       throw new Error("The server returned an unexpected result.");
     }
 
     sessionStorage.setItem("pahuway-result", result.stress_level);
-    window.location.href = "results.html";
+    const session = await window.pahuwaySession();
+    window.location.href = session ? '/dashboard' : 'results.html';
   } catch (err) {
     error.textContent = `${err.message} Please try again.`;
   } finally {

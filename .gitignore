@@ -7,3 +7,7 @@ models/*.pkl
 
 instance/
 .env
+.runtime/
+.pytest_cache/
+pytest-cache-files-*/
+test-results/

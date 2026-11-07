@@ -4,6 +4,14 @@ from flask_limiter.util import get_remote_address
 
 from pathlib import Path
 import math
+import os
+import time
+import secrets
+import hashlib
+from contextlib import closing
+from urllib.parse import urlsplit
+from argon2 import PasswordHasher
+from argon2.exceptions import VerificationError, InvalidHashError
 
 # ADDED: Check the basic format of email addresses.
 import re
@@ -11,16 +19,16 @@ import re
 # ADDED: Handle database errors, including duplicate email addresses.
 import sqlite3
 
-# ADDED: Hash passwords before saving them to the database.
-from werkzeug.security import generate_password_hash
+# Verify hashes from accounts created by the previous signup endpoint.
+from werkzeug.security import check_password_hash
 
 # ADDED: Use the SQLite connection function from database.py.
-from database import get_connection
+from database import get_connection, initialize_database
 
 import joblib
 import numpy as np
 import pandas as pd
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, g, redirect
 
 # Locate your website and trained model.
 BASE_DIR = Path(__file__).resolve().parent
@@ -44,17 +52,141 @@ app = Flask(
 # Limit request bodies to 4 KB (4,096 bytes).
 # This rejects oversized submissions before processing the answers.
 app.config["MAX_CONTENT_LENGTH"] = 4 * 1024
-
-
-# Track requests using the caller's IP address.
-# Counters are stored in memory and reset when the server restarts.
-# Enable response headers that describe the request limits.
-limiter = Limiter(
-    key_func=get_remote_address,
-    app=app,
-    storage_uri="memory://",
-    headers_enabled=True,
+app.config.update(
+    SESSION_COOKIE_NAME="pahuway_session",
+    SESSION_COOKIE_SECURE=os.environ.get("SESSION_COOKIE_SECURE", "0") == "1",
+    AUTH_SESSION_SECONDS=int(os.environ.get("AUTH_SESSION_SECONDS", "28800")),
 )
+initialize_database()
+password_hasher = PasswordHasher()
+dummy_hash = password_hasher.hash(secrets.token_urlsafe(32))
+limiter = Limiter(key_func=get_remote_address, app=app,
+                  storage_uri="memory://", headers_enabled=True)
+
+
+def token_digest(token):
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+@app.before_request
+def authenticate_request():
+    g.user = None
+    g.auth_session = None
+    token = request.cookies.get(app.config["SESSION_COOKIE_NAME"], "")
+    if token and len(token) <= 128:
+        with closing(get_connection()) as connection:
+            row = connection.execute(
+                """SELECT s.*, u.display_name, u.email FROM auth_sessions s
+                   JOIN users u ON u.id = s.user_id
+                   WHERE token_hash = ? AND expires_at > ?""",
+                (token_digest(token), int(time.time())),
+            ).fetchone()
+        if row:
+            g.auth_session = row
+            g.user = {"id": row["user_id"], "display_name": row["display_name"],
+                      "email": row["email"]}
+    if request.method in {"POST", "PUT", "PATCH", "DELETE"} and request.path.startswith("/api/"):
+        origin = request.headers.get("Origin")
+        expected = urlsplit(os.environ.get("APP_ORIGIN", request.host_url))
+        if (request.headers.get("Sec-Fetch-Site") == "cross-site" or
+                (origin and urlsplit(origin)[:2] != expected[:2])):
+            return jsonify(error="Request origin is not allowed."), 403
+        if not request.is_json:
+            return jsonify(error="Send data as JSON."), 415
+        if g.user and not secrets.compare_digest(
+            request.headers.get("X-CSRF-Token", "").encode(), g.auth_session["csrf_token"].encode()
+        ):
+            return jsonify(error="Session verification failed. Refresh and try again."), 403
+
+
+@app.after_request
+def security_headers(response):
+    if request.path.startswith("/api/") or response.mimetype == "text/html":
+        response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "same-origin"
+    response.headers["X-Frame-Options"] = "DENY"
+    return response
+
+
+@app.get("/dashboard")
+def dashboard():
+    if not g.user:
+        return redirect("/sign-in.html")
+    return send_from_directory(WEB_DIR, "results.html")
+
+
+@app.get("/api/session")
+def current_session():
+    if not g.user:
+        return jsonify(error="Please sign in."), 401
+    return jsonify(user=g.user, csrf_token=g.auth_session["csrf_token"],
+                   expires_at=g.auth_session["expires_at"])
+
+
+@app.post("/api/login")
+@limiter.limit("10 per minute")
+def login():
+    data = request.get_json(silent=True)
+    if (not isinstance(data, dict) or set(data) != {"email", "password"}
+            or not all(isinstance(v, str) for v in data.values())
+            or not data["email"].strip() or not data["password"]
+            or len(data["email"]) > 254 or len(data["password"]) > 128):
+        return jsonify(error="Provide your email and password."), 400
+    with closing(get_connection()) as connection:
+        user = connection.execute("SELECT * FROM users WHERE email = ? COLLATE NOCASE",
+                                  (data["email"].strip().lower(),)).fetchone()
+        stored = user["password_hash"] if user else dummy_hash
+        valid = False
+        try:
+            if stored.startswith("$argon2"):
+                valid = password_hasher.verify(stored, data["password"])
+            elif stored.startswith(("scrypt:", "pbkdf2:")):
+                valid = check_password_hash(stored, data["password"])
+        except (VerificationError, InvalidHashError, ValueError):
+            pass
+        if not user or not valid:
+            return jsonify(error="Incorrect email or password."), 401
+        if not stored.startswith("$argon2id$") or password_hasher.check_needs_rehash(stored):
+            connection.execute("UPDATE users SET password_hash = ? WHERE id = ?",
+                               (password_hasher.hash(data["password"]), user["id"]))
+        token = secrets.token_urlsafe(32)
+        csrf = secrets.token_urlsafe(32)
+        expires = int(time.time()) + app.config["AUTH_SESSION_SECONDS"]
+        connection.execute("DELETE FROM auth_sessions WHERE expires_at <= ? OR token_hash = ?",
+                           (int(time.time()), token_digest(request.cookies.get(app.config["SESSION_COOKIE_NAME"], ""))))
+        connection.execute("INSERT INTO auth_sessions(token_hash, user_id, csrf_token, expires_at) VALUES (?, ?, ?, ?)",
+                           (token_digest(token), user["id"], csrf, expires))
+        connection.commit()
+    response = jsonify(message="Signed in successfully.", redirect="/dashboard")
+    response.set_cookie(app.config["SESSION_COOKIE_NAME"], token,
+                        max_age=app.config["AUTH_SESSION_SECONDS"], httponly=True,
+                        secure=app.config["SESSION_COOKIE_SECURE"], samesite="Lax", path="/")
+    return response
+
+
+@app.post("/api/logout")
+def logout():
+    with closing(get_connection()) as connection:
+        connection.execute("DELETE FROM auth_sessions WHERE token_hash = ?",
+                           (token_digest(request.cookies.get(app.config["SESSION_COOKIE_NAME"], "")),))
+        connection.commit()
+    response = jsonify(message="Signed out.")
+    response.delete_cookie(app.config["SESSION_COOKIE_NAME"], path="/",
+                           secure=app.config["SESSION_COOKIE_SECURE"], httponly=True, samesite="Lax")
+    return response
+
+
+@app.get("/api/history")
+def history():
+    if not g.user:
+        return jsonify(error="Please sign in."), 401
+    with closing(get_connection()) as connection:
+        rows = connection.execute(
+            "SELECT id, stress_level, created_at FROM assessments WHERE user_id = ? ORDER BY id DESC LIMIT 50",
+            (g.user["id"],),
+        ).fetchall()
+    return jsonify(results=[dict(row) for row in rows])
 
 
 @app.get("/")
@@ -148,6 +280,14 @@ def predict():
         # Apply saved preprocessing and run the trained KNN.
         prediction = model.predict(input_data)[0]
 
+        if g.user:
+            with closing(get_connection()) as connection:
+                connection.execute(
+                    "INSERT INTO assessments(user_id, stress_level) VALUES (?, ?)",
+                    (g.user["id"], str(prediction)),
+                )
+                connection.commit()
+
         return jsonify({
             "stress_level": str(prediction),
         })
@@ -220,10 +360,7 @@ def signup():
 
     # Generate a salted password hash.
     # The original password is never saved in the database.
-    password_hash = generate_password_hash(
-        password,
-        method="scrypt",
-    )
+    password_hash = password_hasher.hash(password)
 
     connection = None
 
@@ -289,6 +426,12 @@ def too_many_requests(error):
     return jsonify({
         "error": "Too many requests. Please wait one minute and try again."
     }), 429
+
+
+@app.errorhandler(sqlite3.Error)
+def database_error(error):
+    app.logger.exception("Database request failed")
+    return jsonify(error="Unable to complete your request. Please try again later."), 503
 
 
 if __name__ == "__main__":

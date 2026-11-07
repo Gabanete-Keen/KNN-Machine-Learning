@@ -1,6 +1,35 @@
-function renderResult() {
+async function renderResult() {
   const section = document.querySelector(".empty-state");
   if (!section) return;
+
+  if (window.location.pathname === '/dashboard') {
+    section.replaceChildren();
+    try {
+      const response = await fetch('/api/history', { cache: 'no-store' });
+      if (response.status === 401) {
+        window.location.replace('/sign-in.html');
+        return;
+      }
+      if (!response.ok) throw new Error('Unable to load your results. Please refresh to try again.');
+      const { results } = await response.json();
+      const heading = document.createElement('h2');
+      heading.textContent = results.length ? 'Your assessment history' : 'No results yet';
+      const list = document.createElement('ul');
+      results.forEach((result) => {
+        const item = document.createElement('li');
+        item.textContent = `${result.created_at} UTC — Predicted stress level: ${result.stress_level}`;
+        list.append(item);
+      });
+      const link = document.createElement('a');
+      link.href = 'TakeTest.html';
+      link.className = 'button';
+      link.textContent = 'TakeTest';
+      section.replaceChildren(heading, ...(results.length ? [list] : []), link);
+    } catch (error) {
+      section.textContent = error.message;
+    }
+    return;
+  }
 
   const level = sessionStorage.getItem("pahuway-result");
   const hasResult = ["Low", "Medium", "High"].includes(level);

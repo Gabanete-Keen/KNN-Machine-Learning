@@ -5,6 +5,18 @@ from flask_limiter.util import get_remote_address
 from pathlib import Path
 import math
 
+# ADDED: Check the basic format of email addresses.
+import re
+
+# ADDED: Handle database errors, including duplicate email addresses.
+import sqlite3
+
+# ADDED: Hash passwords before saving them to the database.
+from werkzeug.security import generate_password_hash
+
+# ADDED: Use the SQLite connection function from database.py.
+from database import get_connection
+
 import joblib
 import numpy as np
 import pandas as pd
@@ -146,14 +158,129 @@ def predict():
             "error": "Unable to calculate a prediction."
         }), 500
 
-# Return a readable JSON message when a request exceeds 4 KB.
-# HTTP 413 means the request body is too large.
+# ADDED: Create user accounts from the signup form.
+# Limit signup attempts to five per minute per IP address.
+@app.post("/api/signup")
+@limiter.limit("5 per minute")
+def signup():
+    # Accept JSON only, matching what our JavaScript form will send.
+    if not request.is_json:
+        return jsonify({"error": "Send data as JSON."}), 415
+
+    data = request.get_json(silent=True)
+
+    # Reject invalid JSON or values that are not an object.
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid signup data."}), 400
+
+    # Require exactly these three fields.
+    # This also rejects unexpected fields supplied by a caller.
+    required = {"display_name", "email", "password"}
+
+    if set(data) != required:
+        return jsonify({
+            "error": "Provide your name, email, and password."
+        }), 400
+
+    # Check types before using string operations.
+    if not all(isinstance(data[field], str) for field in required):
+        return jsonify({
+            "error": "All fields must contain text."
+        }), 400
+
+    # Remove surrounding spaces from names and email addresses.
+    # Use lowercase emails for consistent account lookup.
+    display_name = data["display_name"].strip()
+    email = data["email"].strip().lower()
+
+    # Preserve the password exactly as entered.
+    password = data["password"]
+
+    # Check lengths in the backend, even if the website also checks them.
+    if not 1 <= len(display_name) <= 80:
+        return jsonify({
+            "error": "Your name must contain 1–80 characters."
+        }), 400
+
+    # Check basic email formatting.
+    # This does not prove that the user owns the email address.
+    if (
+        len(email) > 254
+        or not re.fullmatch(r"[^@\s]+@[^@\s]+[.][^@\s]+", email)
+    ):
+        return jsonify({
+            "error": "Enter a valid email address."
+        }), 400
+
+    # Accept long passwords or passphrases without silently shortening them.
+    if not 15 <= len(password) <= 128:
+        return jsonify({
+            "error": "Use a password containing 15–128 characters."
+        }), 400
+
+    # Generate a salted password hash.
+    # The original password is never saved in the database.
+    password_hash = generate_password_hash(
+        password,
+        method="scrypt",
+    )
+
+    connection = None
+
+    try:
+        connection = get_connection()
+
+        # Parameterized SQL prevents user values from becoming SQL commands.
+        # Never replace these placeholders with an f-string.
+        connection.execute(
+            """
+            INSERT INTO users (display_name, email, password_hash)
+            VALUES (?, ?, ?)
+            """,
+            (display_name, email, password_hash),
+        )
+
+        # Save the new account permanently.
+        connection.commit()
+
+        # HTTP 201 means a new record was created.
+        # Creating an account does not automatically log the user in.
+        return jsonify({
+            "message": "Account created successfully."
+        }), 201
+
+    except sqlite3.IntegrityError:
+        # The UNIQUE email constraint prevents duplicate accounts.
+        return jsonify({
+            "error": (
+                "Unable to create this account. "
+                "Try another email or sign in."
+            )
+        }), 409
+
+    except sqlite3.Error:
+        # Log technical details on the server.
+        # Show users a general message instead of database details.
+        app.logger.exception("Account creation failed")
+
+        return jsonify({
+            "error": "Unable to create your account. Please try again later."
+        }), 500
+
+    finally:
+        # Close the connection whether account creation succeeds or fails.
+        if connection is not None:
+            connection.close()
+
+            
+
+# CHANGED: This message applies to both assessment and account requests.
+# HTTP 413 means the request body exceeds our 4 KB limit.
 @app.errorhandler(413)
 def request_too_large(error):
     return jsonify({
-        "error": "Request too large. Submit only your assessment answers."
+        "error": "Request too large. Please reduce the submitted data."
     }), 413
-
 
 # Return a readable JSON message when the request limit is exceeded.
 # HTTP 429 means too many requests were sent.

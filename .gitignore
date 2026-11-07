@@ -4,3 +4,6 @@ __pycache__/
 models/*.joblib
 models/*.pkl
 .venv312/
+
+instance/
+.env

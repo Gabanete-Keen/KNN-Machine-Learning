@@ -1,3 +1,7 @@
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+
 from pathlib import Path
 import math
 
@@ -25,6 +29,21 @@ app = Flask(
     static_url_path="",
 )
 
+# Limit request bodies to 4 KB (4,096 bytes).
+# This rejects oversized submissions before processing the answers.
+app.config["MAX_CONTENT_LENGTH"] = 4 * 1024
+
+
+# Track requests using the caller's IP address.
+# Counters are stored in memory and reset when the server restarts.
+# Enable response headers that describe the request limits.
+limiter = Limiter(
+    key_func=get_remote_address,
+    app=app,
+    storage_uri="memory://",
+    headers_enabled=True,
+)
+
 
 @app.get("/")
 def home():
@@ -40,6 +59,9 @@ def health():
 
 
 @app.post("/api/predict")
+# Allow at most 10 prediction requests per minute from each IP address.
+# Extra requests receive HTTP 429 to reduce repeated requests and abuse.
+@limiter.limit("10 per minute")
 def predict():
     answers = request.get_json(silent=True)
 
@@ -123,6 +145,23 @@ def predict():
         return jsonify({
             "error": "Unable to calculate a prediction."
         }), 500
+
+# Return a readable JSON message when a request exceeds 4 KB.
+# HTTP 413 means the request body is too large.
+@app.errorhandler(413)
+def request_too_large(error):
+    return jsonify({
+        "error": "Request too large. Submit only your assessment answers."
+    }), 413
+
+
+# Return a readable JSON message when the request limit is exceeded.
+# HTTP 429 means too many requests were sent.
+@app.errorhandler(429)
+def too_many_requests(error):
+    return jsonify({
+        "error": "Too many requests. Please wait one minute and try again."
+    }), 429
 
 
 if __name__ == "__main__":

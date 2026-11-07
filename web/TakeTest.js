@@ -142,9 +142,27 @@ form.addEventListener("submit", async (event) => {
       throw new Error("The server returned an unexpected result.");
     }
 
+        // Keep the successful prediction available in this browser tab.
     sessionStorage.setItem("pahuway-result", result.stress_level);
-    const session = await window.pahuwaySession();
-    window.location.href = session ? '/dashboard' : 'results.html';
+
+    // Default to displaying the completed result.
+    // A failed session check must not tell the user to submit again,
+    // because the server may already have saved their assessment.
+    let destination = "results.html";
+
+    try {
+      const session = await window.pahuwaySession();
+
+      // Signed-in users can view their saved assessment history.
+      if (session) {
+        destination = "/dashboard";
+      }
+    } catch {
+      // The prediction succeeded. Show its result even if checking
+      // the account session temporarily fails.
+    }
+
+    window.location.href = destination;
   } catch (err) {
     error.textContent = `${err.message} Please try again.`;
   } finally {
